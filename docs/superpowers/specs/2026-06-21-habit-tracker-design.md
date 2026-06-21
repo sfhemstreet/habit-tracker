@@ -389,6 +389,7 @@ Gate: **TS strict clean + ESLint clean + all tests green** before the review pas
 
 ## 18. Quality gate / acceptance checklist
 
+- **All tests pass** — the full Vitest suite is green; TS strict + ESLint clean.
 - App runs with no TypeScript errors; no missing imports.
 - Navigation works across all routes (desktop sidebar + mobile bottom nav).
 - Habit creation + editing works; logging works for **every** type.
