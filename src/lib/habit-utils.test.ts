@@ -136,6 +136,18 @@ describe("longestStreak", () => {
     ];
     expect(longestStreak(h, entries, "2026-06-21")).toBe(3);
   });
+
+  it("respects a custom Mon/Wed/Fri schedule", () => {
+    const h = habit({ frequency: "custom", activeDays: [1, 3, 5], createdAt: "2026-06-01T08:00:00.000Z" });
+    // Mon 06-15, Wed 06-17, Fri 06-19, Mon 06-22 completed (4 in a row); Wed 06-24 missed
+    const entries = [
+      entry("2026-06-15", true),
+      entry("2026-06-17", true),
+      entry("2026-06-19", true),
+      entry("2026-06-22", true),
+    ];
+    expect(longestStreak(h, entries, "2026-06-26")).toBe(4);
+  });
 });
 
 describe("completionRate", () => {

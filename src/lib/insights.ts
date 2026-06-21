@@ -5,7 +5,7 @@ import {
   isHabitCompleted,
   isScheduledOn,
 } from "./habit-utils";
-import { addDays, eachDayInRange, isFuture, todayKey } from "./date-utils";
+import { addDays, eachDayInRange, isFuture, toDayKey, todayKey } from "./date-utils";
 
 export type InsightKind =
   | "streak-celebration"
@@ -38,8 +38,11 @@ function entriesFor(habitId: string, entries: HabitEntry[]): HabitEntry[] {
 function missesInLast7(habit: Habit, entries: HabitEntry[], todayK: string): number {
   const byDate = new Map(entries.map((e) => [e.date, e]));
   const yesterday = addDays(todayK, -1);
+  const startDay = toDayKey(new Date(habit.createdAt));
+  let from = addDays(todayK, -7);
+  if (from < startDay) from = startDay;
   let misses = 0;
-  for (const day of eachDayInRange(addDays(todayK, -7), yesterday)) {
+  for (const day of eachDayInRange(from, yesterday)) {
     if (!isScheduledOn(habit, day)) continue;
     if (!isHabitCompleted(habit, byDate.get(day))) misses += 1;
   }

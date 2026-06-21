@@ -189,8 +189,10 @@ export function formatValue(habit: Habit, value: HabitEntryValue): string {
   switch (habit.type) {
     case "boolean":
       return value === true ? "Done" : "Not done";
-    case "number":
-      return `${Number(value)}${habit.targetUnit ? ` ${habit.targetUnit}` : ""}`;
+    case "number": {
+      const n = Number(value);
+      return `${Number.isNaN(n) ? 0 : n}${habit.targetUnit ? ` ${habit.targetUnit}` : ""}`;
+    }
     case "duration":
       return formatDuration(Number(value));
     case "time":

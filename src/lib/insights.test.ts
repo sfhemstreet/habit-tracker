@@ -68,4 +68,13 @@ describe("buildWeeklyReview", () => {
     const review = buildWeeklyReview([h], [], today, { weekStartsOn: 1 });
     expect(review.bestHabitId).toBeNull();
   });
+
+  it("suggests stacking for an inconsistent (30-70%) habit", () => {
+    const h = habit({ id: "h3", name: "Floss" });
+    const entries = ["08", "10", "12", "14", "16", "18", "20"].map((d) =>
+      entry("h3", `2026-06-${d}`, true),
+    ); // 7 of the trailing 14 days completed => ~50%
+    const review = buildWeeklyReview([h], entries, today, { weekStartsOn: 1 });
+    expect(review.insights.some((x) => x.kind === "stack-habit" && x.habitId === "h3")).toBe(true);
+  });
 });
