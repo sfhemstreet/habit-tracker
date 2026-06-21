@@ -29,4 +29,11 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // shadcn/ui primitives are vendored; they export variants alongside components.
+    files: ['src/components/ui/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

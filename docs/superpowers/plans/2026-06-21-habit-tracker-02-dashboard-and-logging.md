@@ -298,7 +298,7 @@ export function ProgressRing({
   const offset = c * (1 - clamped);
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={label ?? `${Math.round(clamped * 100)}%`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-line)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={stroke} />
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -461,7 +461,7 @@ export function HabitLogControl({ habit, value, onChange }: Props) {
           onClick={() => onChange(!done)}
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
-            done ? "bg-[var(--color-success)] text-white border-transparent" : "border-[var(--input)] text-[var(--color-muted)]",
+            done ? "bg-[var(--success)] text-white border-transparent" : "border-[var(--input)] text-[var(--muted-foreground)]",
           )}
         >
           <Check className="h-4 w-4" />
@@ -493,7 +493,7 @@ export function HabitLogControl({ habit, value, onChange }: Props) {
               onClick={() => onChange(m)}
               className={cn(
                 "rounded-lg px-2.5 py-1 text-xs font-medium",
-                current === m ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--color-muted)]",
+                current === m ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--muted-foreground)]",
               )}
             >
               {m}m
@@ -525,7 +525,7 @@ export function HabitLogControl({ habit, value, onChange }: Props) {
               onClick={() => onChange(opt.id)}
               className={cn(
                 "rounded-full px-3 py-1 text-xs font-medium",
-                value === opt.id ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--color-muted)]",
+                value === opt.id ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--muted-foreground)]",
               )}
             >
               {opt.label}
@@ -544,7 +544,7 @@ function DurationCustom({ onSubmit }: { onSubmit: (m: number) => void }) {
   const [val, setVal] = useState("");
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="rounded-lg bg-[var(--secondary)] px-2.5 py-1 text-xs font-medium text-[var(--color-muted)]">
+      <button type="button" onClick={() => setOpen(true)} className="rounded-lg bg-[var(--secondary)] px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)]">
         Custom
       </button>
     );
@@ -615,13 +615,13 @@ export function HabitCard({ habit, entry, streak, onLog }: Props) {
         : habit.description ?? "";
 
   return (
-    <div className={cn("flex items-center gap-3 rounded-2xl border bg-[var(--card)] p-3", done && "border-[var(--color-success-soft)]")}>
+    <div className={cn("flex items-center gap-3 rounded-2xl border bg-[var(--card)] p-3", done && "border-[var(--success-soft)]")}>
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${habit.color}1a`, color: habit.color }}>
         <HabitIcon name={habit.icon} className="h-5 w-5" />
       </div>
       <Link to={`/habits/${habit.id}`} className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold text-[var(--foreground)]">{habit.name}</div>
-        <div className="flex items-center gap-2 text-xs text-[var(--color-muted)]">
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
           {streak > 0 ? (
             <span className="inline-flex items-center gap-0.5">
               <Flame className="h-3 w-3 text-[#E8A23D]" /> {streak}
@@ -668,9 +668,9 @@ function greeting(now: Date): string {
 export function TodayHeader({ todayKey }: { todayKey: string }) {
   return (
     <header className="mb-4">
-      <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">{formatLongDate(todayKey)}</div>
+      <div className="text-xs uppercase tracking-wide text-[var(--muted-foreground)]">{formatLongDate(todayKey)}</div>
       <h1 className="text-xl font-bold text-[var(--foreground)]">{greeting(new Date())}</h1>
-      <p className="text-sm text-[var(--color-muted)]">What did you make progress on today?</p>
+      <p className="text-sm text-[var(--muted-foreground)]">What did you make progress on today?</p>
     </header>
   );
 }
@@ -698,7 +698,7 @@ export function DailyProgressCard({ completed, total, bestStreak }: Props) {
         <div className="text-sm font-semibold text-[var(--foreground)]">
           {completed} of {total} habit{total === 1 ? "" : "s"} done
         </div>
-        <div className="text-xs text-[var(--color-muted)]">
+        <div className="text-xs text-[var(--muted-foreground)]">
           {remaining > 0 ? `Small actions compound. ${remaining} to go.` : "All done today. Nice work."}
         </div>
       </div>
@@ -707,7 +707,7 @@ export function DailyProgressCard({ completed, total, bestStreak }: Props) {
           <div className="flex items-center gap-1 text-base font-bold text-[var(--foreground)]">
             <Flame className="h-4 w-4 text-[#E8A23D]" /> {bestStreak}
           </div>
-          <div className="text-[10px] text-[var(--color-muted)]">top streak</div>
+          <div className="text-[10px] text-[var(--muted-foreground)]">top streak</div>
         </div>
       ) : null}
     </div>
@@ -730,9 +730,9 @@ interface Props {
 export function EmptyState({ icon, title, description, children }: Props) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-[var(--card)] px-6 py-12 text-center">
-      {icon ? <div className="mb-3 text-[var(--color-muted)]">{icon}</div> : null}
+      {icon ? <div className="mb-3 text-[var(--muted-foreground)]">{icon}</div> : null}
       <h3 className="text-base font-semibold text-[var(--foreground)]">{title}</h3>
-      {description ? <p className="mt-1 max-w-sm text-sm text-[var(--color-muted)]">{description}</p> : null}
+      {description ? <p className="mt-1 max-w-sm text-sm text-[var(--muted-foreground)]">{description}</p> : null}
       {children ? <div className="mt-4 flex gap-2">{children}</div> : null}
     </div>
   );
@@ -799,7 +799,7 @@ export function Sidebar({ onNewHabit }: { onNewHabit: () => void }) {
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm",
-                isActive ? "bg-[var(--accent)] font-semibold text-[var(--primary)]" : "text-[var(--color-muted)] hover:bg-[var(--secondary)]",
+                isActive ? "bg-[var(--accent)] font-semibold text-[var(--primary)]" : "text-[var(--muted-foreground)] hover:bg-[var(--secondary)]",
               )
             }
           >
@@ -841,7 +841,7 @@ export function MobileNav({ onNewHabit }: { onNewHabit: () => void }) {
 
 function NavTab({ to, label, icon: Icon }: (typeof NAV_ITEMS)[number]) {
   return (
-    <NavLink to={to} end={to === "/"} className={({ isActive }) => cn("flex flex-col items-center gap-0.5 text-[10px]", isActive ? "text-[var(--primary)]" : "text-[var(--color-muted)]")}>
+    <NavLink to={to} end={to === "/"} className={({ isActive }) => cn("flex flex-col items-center gap-0.5 text-[10px]", isActive ? "text-[var(--primary)]" : "text-[var(--muted-foreground)]")}>
       <Icon className="h-5 w-5" />
       {label}
     </NavLink>
@@ -878,7 +878,7 @@ export function AppShell() {
 `src/routes/calendar.tsx`, `src/routes/insights.tsx`, `src/routes/settings.tsx`, `src/routes/habit-detail.tsx` — each:
 ```tsx
 export default function CalendarRoute() {
-  return <div className="text-sm text-[var(--color-muted)]">Coming in Plan 3.</div>;
+  return <div className="text-sm text-[var(--muted-foreground)]">Coming in Plan 3.</div>;
 }
 ```
 (name the function per file: `CalendarRoute`, `InsightsRoute`, `SettingsRoute`, `HabitDetailRoute`).
@@ -1110,12 +1110,12 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
       <Field label="Type">
         <div className="grid grid-cols-3 gap-1.5">
           {(Object.keys(TYPE_LABELS) as HabitType[]).map((t) => (
-            <button key={t} type="button" onClick={() => setType(t)} disabled={!!initial} className={cn("rounded-lg px-2 py-1.5 text-xs font-medium", type === t ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--color-muted)]", initial && "opacity-60")}>
+            <button key={t} type="button" onClick={() => setType(t)} disabled={!!initial} className={cn("rounded-lg px-2 py-1.5 text-xs font-medium", type === t ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--muted-foreground)]", initial && "opacity-60")}>
               {TYPE_LABELS[t]}
             </button>
           ))}
         </div>
-        {initial ? <p className="mt-1 text-[11px] text-[var(--color-muted)]">Type can't change after creation.</p> : null}
+        {initial ? <p className="mt-1 text-[11px] text-[var(--muted-foreground)]">Type can't change after creation.</p> : null}
       </Field>
 
       {showTarget ? (
@@ -1140,7 +1140,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
                   placeholder={`Option ${i + 1}`}
                   className="flex-1 rounded-lg border bg-[var(--card)] px-3 py-2 text-sm"
                 />
-                <button type="button" aria-label={`Remove option ${i + 1}`} onClick={() => setCategoryOptions((prev) => prev.filter((o) => o.id !== opt.id))} className="rounded-lg bg-[var(--secondary)] px-2.5 py-2 text-[var(--color-muted)]">
+                <button type="button" aria-label={`Remove option ${i + 1}`} onClick={() => setCategoryOptions((prev) => prev.filter((o) => o.id !== opt.id))} className="rounded-lg bg-[var(--secondary)] px-2.5 py-2 text-[var(--muted-foreground)]">
                   ✕
                 </button>
               </div>
@@ -1163,7 +1163,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
       <Field label="Frequency">
         <div className="flex gap-1.5">
           {(["daily", "custom"] as HabitFrequency[]).map((f) => (
-            <button key={f} type="button" onClick={() => setFrequency(f)} className={cn("rounded-lg px-3 py-1.5 text-xs font-medium", frequency === f ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--color-muted)]")}>
+            <button key={f} type="button" onClick={() => setFrequency(f)} className={cn("rounded-lg px-3 py-1.5 text-xs font-medium", frequency === f ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--muted-foreground)]")}>
               {f === "daily" ? "Every day" : "Specific days"}
             </button>
           ))}
@@ -1173,7 +1173,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
             {WEEKDAY_LABELS.map((d, i) => {
               const on = activeDays.includes(i);
               return (
-                <button key={i} type="button" aria-label={`Toggle day ${i}`} onClick={() => setActiveDays((prev) => (on ? prev.filter((x) => x !== i) : [...prev, i]))} className={cn("h-8 w-8 rounded-full text-xs font-medium", on ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--color-muted)]")}>
+                <button key={i} type="button" aria-label={`Toggle day ${i}`} onClick={() => setActiveDays((prev) => (on ? prev.filter((x) => x !== i) : [...prev, i]))} className={cn("h-8 w-8 rounded-full text-xs font-medium", on ? "bg-[var(--primary)] text-white" : "bg-[var(--secondary)] text-[var(--muted-foreground)]")}>
                   {d}
                 </button>
               );
@@ -1185,7 +1185,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
       {error ? <p className="text-xs text-[var(--destructive)]">{error}</p> : null}
 
       <div className="mt-1 flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--color-muted)]">Cancel</button>
+        <button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--muted-foreground)]">Cancel</button>
         <button type="button" onClick={submit} className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white">{initial ? "Save" : "Create habit"}</button>
       </div>
     </div>
@@ -1195,7 +1195,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex flex-1 flex-col gap-1">
-      <span className="text-xs font-medium text-[var(--color-muted)]">{label}</span>
+      <span className="text-xs font-medium text-[var(--muted-foreground)]">{label}</span>
       {children}
     </label>
   );

@@ -15,6 +15,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path alias */
+    "paths": { "@/*": ["./src/*"] },
+
     /* Strictness */
     "strict": true,
 

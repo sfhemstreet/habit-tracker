@@ -352,9 +352,9 @@ interface Props {
 export function StatsCard({ label, value, hint }: Props) {
   return (
     <div className="rounded-2xl border bg-[var(--card)] p-3">
-      <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">{label}</div>
+      <div className="text-[11px] uppercase tracking-wide text-[var(--muted-foreground)]">{label}</div>
       <div className="text-xl font-bold text-[var(--foreground)]">{value}</div>
-      {hint ? <div className="text-[11px] text-[var(--color-muted)]">{hint}</div> : null}
+      {hint ? <div className="text-[11px] text-[var(--muted-foreground)]">{hint}</div> : null}
     </div>
   );
 }
@@ -399,7 +399,7 @@ export function HabitHeatmap({ habit, entries, weeks = 16 }: Props) {
   for (let i = 0; i < days.length; i += 7) columns.push(days.slice(i, i + 7));
 
   function tint(day: string): string {
-    if (!isScheduledOn(habit, day)) return "var(--color-line)";
+    if (!isScheduledOn(habit, day)) return "var(--line)";
     if (isHabitCompleted(habit, byDate.get(day))) return habit.color;
     return "var(--secondary)";
   }
@@ -447,7 +447,7 @@ export function TrendChart({ habit, entries }: { habit: Habit; entries: HabitEnt
     return (
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
           <XAxis dataKey="label" tick={{ fontSize: 11 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
           <Tooltip />
@@ -464,7 +464,7 @@ export function TrendChart({ habit, entries }: { habit: Habit; entries: HabitEnt
     return (
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={series}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
           <XAxis dataKey="date" tickFormatter={tickLabel} tick={{ fontSize: 10 }} interval={4} />
           <YAxis domain={[0, 1]} ticks={[0, 1]} tick={{ fontSize: 11 }} />
           <Tooltip />
@@ -477,11 +477,11 @@ export function TrendChart({ habit, entries }: { habit: Habit; entries: HabitEnt
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={series}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
         <XAxis dataKey="date" tickFormatter={tickLabel} tick={{ fontSize: 10 }} interval={4} />
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip />
-        {habit.target ? <ReferenceLine y={habit.target} stroke="var(--color-muted)" strokeDasharray="4 4" /> : null}
+        {habit.target ? <ReferenceLine y={habit.target} stroke="var(--muted-foreground)" strokeDasharray="4 4" /> : null}
         <Line type="monotone" dataKey="value" stroke={habit.color} strokeWidth={2} dot={false} connectNulls />
       </LineChart>
     </ResponsiveContainer>
@@ -536,7 +536,7 @@ export default function HabitDetailRoute() {
 
   if (!habit) {
     return (
-      <div className="text-sm text-[var(--color-muted)]">
+      <div className="text-sm text-[var(--muted-foreground)]">
         Habit not found. <Link to="/" className="text-[var(--primary)]">Back to Today</Link>
       </div>
     );
@@ -547,7 +547,7 @@ export default function HabitDetailRoute() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/" className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)]">
+      <Link to="/" className="inline-flex items-center gap-1 text-sm text-[var(--muted-foreground)]">
         <ChevronLeft className="h-4 w-4" /> Today
       </Link>
 
@@ -557,7 +557,7 @@ export default function HabitDetailRoute() {
         </div>
         <div className="flex-1">
           <h1 className="text-lg font-bold text-[var(--foreground)]">{habit.name}</h1>
-          {habit.description ? <p className="text-sm text-[var(--color-muted)]">{habit.description}</p> : null}
+          {habit.description ? <p className="text-sm text-[var(--muted-foreground)]">{habit.description}</p> : null}
         </div>
         <button onClick={() => setEditing(true)} aria-label="Edit habit" className="rounded-lg bg-[var(--secondary)] p-2"><Pencil className="h-4 w-4" /></button>
         {!habit.archivedAt ? (
@@ -587,12 +587,12 @@ export default function HabitDetailRoute() {
       <section className="rounded-2xl border bg-[var(--card)] p-4">
         <h2 className="mb-3 text-sm font-semibold">Recent entries</h2>
         {habitEntries.length === 0 ? (
-          <p className="text-sm text-[var(--color-muted)]">No entries yet.</p>
+          <p className="text-sm text-[var(--muted-foreground)]">No entries yet.</p>
         ) : (
           <ul className="flex flex-col divide-y">
             {habitEntries.slice(0, 10).map((e) => (
               <li key={e.id} className="flex items-center justify-between py-2 text-sm">
-                <span className="text-[var(--color-muted)]">{e.date}</span>
+                <span className="text-[var(--muted-foreground)]">{e.date}</span>
                 <span className="font-medium">{formatValue(habit, e.value)}</span>
               </li>
             ))}
@@ -708,7 +708,7 @@ export function CalendarMonth({ anchorKey, onAnchorChange, habits, entries, sele
         <div className="text-sm font-semibold">{monthLabel(anchorKey)}</div>
         <button aria-label="Next month" onClick={() => onAnchorChange(shiftMonth(anchorKey, 1))} className="rounded-lg bg-[var(--secondary)] p-1.5"><ChevronRight className="h-4 w-4" /></button>
       </div>
-      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] uppercase text-[var(--color-muted)]">
+      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] uppercase text-[var(--muted-foreground)]">
         {HEADERS.map((h) => <div key={h}>{h}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
@@ -752,7 +752,7 @@ export function DayEditor({ dateKey, habits, entries, onLog }: Props) {
     <div className="rounded-2xl border bg-[var(--card)] p-4">
       <h2 className="mb-3 text-sm font-semibold">{formatLongDate(dateKey)}</h2>
       {scheduled.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted)]">No habits scheduled this day.</p>
+        <p className="text-sm text-[var(--muted-foreground)]">No habits scheduled this day.</p>
       ) : (
         <div className="flex flex-col gap-2">
           {scheduled.map((h) => {
@@ -796,7 +796,7 @@ export default function CalendarRoute() {
     <div className="flex flex-col gap-4">
       <header>
         <h1 className="text-xl font-bold">Calendar</h1>
-        <p className="text-sm text-[var(--color-muted)]">Tap a day to review or fill in what you missed.</p>
+        <p className="text-sm text-[var(--muted-foreground)]">Tap a day to review or fill in what you missed.</p>
       </header>
       <CalendarMonth
         anchorKey={anchor}
@@ -854,7 +854,7 @@ export function WeeklyReview({ review, habits }: Props) {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Tile label="Consistency" value={`${Math.round(review.consistency * 100)}%`} />
         <Tile label="Best habit" value={nameOf(review.bestHabitId)} icon={<Trophy className="h-4 w-4 text-[#E8A23D]" />} />
-        <Tile label="Most friction" value={nameOf(review.frictionHabitId)} icon={<TriangleAlert className="h-4 w-4 text-[var(--color-muted)]" />} />
+        <Tile label="Most friction" value={nameOf(review.frictionHabitId)} icon={<TriangleAlert className="h-4 w-4 text-[var(--muted-foreground)]" />} />
         <Tile label="Missed days" value={`${review.missedDays}`} />
       </div>
 
@@ -873,18 +873,18 @@ export function WeeklyReview({ review, habits }: Props) {
 
       <div className="flex flex-col gap-2">
         {review.insights.length === 0 ? (
-          <div className="rounded-2xl border border-dashed bg-[var(--card)] p-4 text-sm text-[var(--color-muted)]">
+          <div className="rounded-2xl border border-dashed bg-[var(--card)] p-4 text-sm text-[var(--muted-foreground)]">
             Keep logging — suggestions will appear as patterns emerge.
           </div>
         ) : (
           review.insights.map((ins) => (
             <div key={ins.id} className="flex items-start gap-3 rounded-2xl border bg-[var(--card)] p-4">
               <div className="mt-0.5">
-                {ins.tone === "positive" ? <Sparkles className="h-5 w-5 text-[var(--color-success)]" /> : <TriangleAlert className="h-5 w-5 text-[#E8A23D]" />}
+                {ins.tone === "positive" ? <Sparkles className="h-5 w-5 text-[var(--success)]" /> : <TriangleAlert className="h-5 w-5 text-[#E8A23D]" />}
               </div>
               <div>
                 <div className="text-sm font-semibold">{ins.title}</div>
-                <div className="text-sm text-[var(--color-muted)]">{ins.message}</div>
+                <div className="text-sm text-[var(--muted-foreground)]">{ins.message}</div>
               </div>
             </div>
           ))
@@ -897,7 +897,7 @@ export function WeeklyReview({ review, habits }: Props) {
 function Tile({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   return (
     <div className="rounded-2xl border bg-[var(--card)] p-3">
-      <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-[var(--color-muted)]">{icon}{label}</div>
+      <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-[var(--muted-foreground)]">{icon}{label}</div>
       <div className="truncate text-base font-bold">{value}</div>
     </div>
   );
@@ -923,7 +923,7 @@ export default function InsightsRoute() {
     <div className="flex flex-col gap-4">
       <header>
         <h1 className="text-xl font-bold">Your week at a glance</h1>
-        <p className="text-sm text-[var(--color-muted)]">What worked, what slipped, what to adjust.</p>
+        <p className="text-sm text-[var(--muted-foreground)]">What worked, what slipped, what to adjust.</p>
       </header>
       <WeeklyReview review={review} habits={habits} />
     </div>
@@ -987,7 +987,7 @@ export default function SettingsRoute() {
     <div className="flex flex-col gap-4">
       <header>
         <h1 className="text-xl font-bold">Settings</h1>
-        <p className="text-sm text-[var(--color-muted)]">Your data lives on this device.</p>
+        <p className="text-sm text-[var(--muted-foreground)]">Your data lives on this device.</p>
       </header>
 
       <section className="rounded-2xl border bg-[var(--card)] p-4">
@@ -1015,13 +1015,13 @@ export default function SettingsRoute() {
           </button>
         </div>
         {status ? (
-          <p className={`mt-3 text-sm ${status.kind === "ok" ? "text-[var(--color-success)]" : "text-[var(--destructive)]"}`}>{status.msg}</p>
+          <p className={`mt-3 text-sm ${status.kind === "ok" ? "text-[var(--success)]" : "text-[var(--destructive)]"}`}>{status.msg}</p>
         ) : null}
       </section>
 
       <section className="rounded-2xl border bg-[var(--card)] p-4">
         <h2 className="mb-2 text-sm font-semibold">About</h2>
-        <p className="text-sm text-[var(--color-muted)]">
+        <p className="text-sm text-[var(--muted-foreground)]">
           Habit Tracker helps you build consistent routines without overcomplicating your life.
           Small actions, tracked consistently, create visible momentum. Your data stays on your
           device — export anytime.
