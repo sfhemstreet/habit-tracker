@@ -96,9 +96,10 @@ Confirm `tsconfig.json` (or `tsconfig.app.json` produced by Vite) has `"strict":
 ```json
 "strict": true,
 "noUnusedLocals": true,
-"noUnusedParameters": true,
-"noUncheckedIndexedAccess": true
+"noUnusedParameters": true
 ```
+
+> Do NOT add `noUncheckedIndexedAccess` — the day-key/time parsing (`const [y, m, d] = key.split("-").map(Number)`) relies on positional destructuring and that flag would turn every such access into a `number | undefined` type error across utils, components, and tests. `strict` is the spec's bar (§17).
 
 - [ ] **Step 6: Replace `src/App.tsx` and `src/main.tsx` with minimal placeholders**
 
@@ -613,26 +614,26 @@ describe("isScheduledOn", () => {
 describe("currentStreak (daily, boolean)", () => {
   const today = "2026-06-21";
   it("counts consecutive completed days including today", () => {
-    const h = habit({ createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-01T08:00:00.000Z" });
     const entries = [entry("2026-06-19", true), entry("2026-06-20", true), entry("2026-06-21", true)];
     expect(currentStreak(h, entries, today)).toBe(3);
   });
 
   it("today not logged does NOT break the streak (grace rule)", () => {
-    const h = habit({ createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-01T08:00:00.000Z" });
     const entries = [entry("2026-06-19", true), entry("2026-06-20", true)]; // no today
     expect(currentStreak(h, entries, today)).toBe(2);
   });
 
   it("a past missed day breaks the streak", () => {
-    const h = habit({ createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-01T08:00:00.000Z" });
     const entries = [entry("2026-06-18", true), entry("2026-06-20", true), entry("2026-06-21", true)];
     // 2026-06-19 is missing → streak is only 20th + 21st
     expect(currentStreak(h, entries, today)).toBe(2);
   });
 
   it("returns 0 when today incomplete and yesterday missed", () => {
-    const h = habit({ createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-01T08:00:00.000Z" });
     const entries = [entry("2026-06-19", true)];
     expect(currentStreak(h, entries, today)).toBe(0);
   });
@@ -641,7 +642,7 @@ describe("currentStreak (daily, boolean)", () => {
 describe("currentStreak (custom schedule)", () => {
   it("skips unscheduled days when counting", () => {
     // Mon/Wed/Fri habit. Today Fri 2026-06-19.
-    const h = habit({ frequency: "custom", activeDays: [1, 3, 5], createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ frequency: "custom", activeDays: [1, 3, 5], createdAt: "2026-06-01T08:00:00.000Z" });
     const entries = [entry("2026-06-15", true), entry("2026-06-17", true), entry("2026-06-19", true)];
     expect(currentStreak(h, entries, "2026-06-19")).toBe(3);
   });
@@ -649,7 +650,7 @@ describe("currentStreak (custom schedule)", () => {
 
 describe("longestStreak", () => {
   it("finds the longest historical run", () => {
-    const h = habit({ createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-01T08:00:00.000Z" });
     const entries = [
       entry("2026-06-01", true),
       entry("2026-06-02", true),
@@ -664,7 +665,7 @@ describe("longestStreak", () => {
 
 describe("completionRate", () => {
   it("is completed/scheduled within the window", () => {
-    const h = habit({ createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-01T08:00:00.000Z" });
     const entries = [
       entry("2026-06-15", true),
       entry("2026-06-16", true),
@@ -679,14 +680,14 @@ describe("completionRate", () => {
   });
 
   it("returns 0 when nothing scheduled in window", () => {
-    const h = habit({ frequency: "custom", activeDays: [], createdAt: "2026-06-01T00:00:00Z" });
+    const h = habit({ frequency: "custom", activeDays: [], createdAt: "2026-06-01T08:00:00.000Z" });
     expect(completionRate(h, [], 7, "2026-06-21")).toBe(0);
   });
 });
 
 describe("totalCompletions & missedDays", () => {
   it("counts completed entries and past missed scheduled days", () => {
-    const h = habit({ createdAt: "2026-06-19T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-19T08:00:00.000Z" });
     const entries = [entry("2026-06-19", true), entry("2026-06-20", false)];
     // today = 21 (pending, excluded). Day 19 completed, day 20 missed.
     expect(totalCompletions(h, entries)).toBe(1);
@@ -696,7 +697,7 @@ describe("totalCompletions & missedDays", () => {
 
 describe("computeStats", () => {
   it("bundles all stats", () => {
-    const h = habit({ createdAt: "2026-06-19T00:00:00Z" });
+    const h = habit({ createdAt: "2026-06-19T08:00:00.000Z" });
     const entries = [entry("2026-06-19", true), entry("2026-06-20", true), entry("2026-06-21", true)];
     const s = computeStats(h, entries, "2026-06-21");
     expect(s.currentStreak).toBe(3);
@@ -742,7 +743,7 @@ Expected: FAIL — module not found.
 
 ```ts
 import type { Habit, HabitEntry, HabitEntryValue, HabitStats } from "./types";
-import { addDays, eachDayInRange, isFuture, toDayKey, weekdayOf } from "./date-utils";
+import { addDays, eachDayInRange, toDayKey, weekdayOf } from "./date-utils";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -866,8 +867,8 @@ export function completionRate(
 
   let scheduled = 0;
   let completed = 0;
+  // Range is already bounded by todayK, so no future days are included.
   for (const day of eachDayInRange(windowStart, todayK)) {
-    if (isFuture(day)) continue;
     if (!isScheduledOn(habit, day)) continue;
     scheduled += 1;
     if (isHabitCompleted(habit, byDate.get(day))) completed += 1;
@@ -981,7 +982,7 @@ function habit(p: Partial<Habit>): Habit {
     type: p.type ?? "boolean",
     color: "#5B6CF0",
     frequency: "daily",
-    createdAt: "2026-05-01T00:00:00Z",
+    createdAt: "2026-05-01T08:00:00.000Z",
     archivedAt: null,
     ...p,
   };
@@ -1374,7 +1375,7 @@ function sample(): PersistedData {
         type: "duration",
         color: "#5B6CF0",
         frequency: "daily",
-        createdAt: "2026-06-01T00:00:00Z",
+        createdAt: "2026-06-01T08:00:00.000Z",
         archivedAt: null,
       },
     ],
@@ -1449,13 +1450,17 @@ export function defaultData(): PersistedData {
 function isValid(data: unknown): data is PersistedData {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
-  return (
-    typeof d.schemaVersion === "number" &&
-    Array.isArray(d.habits) &&
-    Array.isArray(d.entries) &&
-    typeof d.settings === "object" &&
-    d.settings !== null
-  );
+  if (
+    typeof d.schemaVersion !== "number" ||
+    !Array.isArray(d.habits) ||
+    !Array.isArray(d.entries) ||
+    typeof d.settings !== "object" ||
+    d.settings === null
+  ) {
+    return false;
+  }
+  const settings = d.settings as Record<string, unknown>;
+  return settings.weekStartsOn === 0 || settings.weekStartsOn === 1;
 }
 
 /** Hook for future schema migrations. */

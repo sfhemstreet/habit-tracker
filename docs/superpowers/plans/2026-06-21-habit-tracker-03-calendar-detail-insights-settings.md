@@ -1123,4 +1123,5 @@ Then run the requesting-code-review skill for the single end-of-build review (pe
 
 - §3 Calendar (month + prev/next + heatmap + past-day edit) → Tasks 1, 6. §4 Habit Detail (name/desc, all stats, heatmap, type-aware trend, recent entries, edit/archive) → Tasks 4, 5. §5 Insights/Weekly Review (consistency, best, friction, missed, streaks, rule cards) → Tasks 2, 7. §6 Settings (export/import-validated/clear/about) → Task 8. §12 charts per type with empty-state wrapping → Tasks 2, 4. §16 a11y/responsive/microcopy + §18 quality gate → Tasks 9, 10.
 - Pure helpers (`buildMonthGrid`, chart shapers) are TDD'd; UI verified via the manual smoke checklist since component-level coverage beyond Plan 2's log-control tests is intentionally light per the "full MVP then one review" delivery choice.
+- **Week start is fixed to Monday** in `CalendarMonth`/`HabitHeatmap` for the MVP (spec §default). `settings.weekStartsOn` exists in the model and is honored by `startOfWeekKey`, but there's no settings UI to change it yet, so the calendar header (`Mon…Sun`) and grid intentionally hardcode `1`. Wiring it to `settings.weekStartsOn` is a small, isolated follow-up.
 ```

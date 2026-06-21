@@ -363,7 +363,7 @@ git commit -m "feat(ui): add ProgressRing + HabitIcon"
 
 ```tsx
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Habit } from "@/lib/types";
 import { HabitLogControl } from "./habit-log-control";
@@ -410,13 +410,13 @@ describe("HabitLogControl", () => {
     expect(onChange).toHaveBeenCalledWith(30);
   });
 
-  it("time: changing the input logs HH:mm", async () => {
+  it("time: changing the input logs HH:mm", () => {
     const onChange = vi.fn();
     render(<HabitLogControl habit={habit({ type: "time" })} onChange={onChange} />);
     const input = screen.getByLabelText(/time/i);
-    await userEvent.clear(input);
-    await userEvent.type(input, "23:20");
-    expect(onChange).toHaveBeenLastCalledWith("23:20");
+    // jsdom's <input type="time"> rejects partial values, so set it in one change.
+    fireEvent.change(input, { target: { value: "23:20" } });
+    expect(onChange).toHaveBeenCalledWith("23:20");
   });
 
   it("category: clicking a chip logs its option id", async () => {
@@ -707,7 +707,7 @@ export function DailyProgressCard({ completed, total, bestStreak }: Props) {
           <div className="flex items-center gap-1 text-base font-bold text-[var(--foreground)]">
             <Flame className="h-4 w-4 text-[#E8A23D]" /> {bestStreak}
           </div>
-          <div className="text-[10px] text-[var(--color-muted)]">best streak</div>
+          <div className="text-[10px] text-[var(--color-muted)]">top streak</div>
         </div>
       ) : null}
     </div>
@@ -1023,8 +1023,9 @@ git commit -m "feat(today): assemble Today dashboard"
 ```tsx
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import type { Habit, HabitType, HabitFrequency } from "@/lib/types";
+import type { CategoryOption, Habit, HabitType, HabitFrequency } from "@/lib/types";
 import type { AddHabitInput } from "@/store/habit-store";
+import { newId } from "@/lib/id";
 import { presetFor } from "@/lib/habit-presets";
 import { HABIT_COLORS } from "@/lib/color-palette";
 import { cn } from "@/lib/utils";
@@ -1055,6 +1056,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
   const [targetUnit, setTargetUnit] = useState(initial?.targetUnit ?? "");
   const [frequency, setFrequency] = useState<HabitFrequency>(initial?.frequency ?? "daily");
   const [activeDays, setActiveDays] = useState<number[]>(initial?.activeDays ?? [1, 2, 3, 4, 5]);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>(initial?.categoryOptions ?? []);
   const [error, setError] = useState("");
 
   // Apply presets when changing type while creating (not editing).
@@ -1064,6 +1066,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
     setColor(p.color);
     setTarget(p.target?.toString() ?? "");
     setTargetUnit(p.targetUnit ?? "");
+    setCategoryOptions(type === "category" ? (p.categoryOptions ?? []) : []);
   }, [type, initial]);
 
   const showTarget = type === "number" || type === "duration";
@@ -1073,16 +1076,22 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
       setError("Give your habit a name.");
       return;
     }
-    const preset = presetFor(type);
+    const cleanedCategories = categoryOptions
+      .map((o) => ({ id: o.id, label: o.label.trim() }))
+      .filter((o) => o.label.length > 0);
+    if (type === "category" && cleanedCategories.length === 0) {
+      setError("Add at least one category option.");
+      return;
+    }
     onSubmit({
       name: name.trim(),
       description: description.trim() || undefined,
       type,
       color,
-      icon: initial?.icon ?? preset.icon,
+      icon: initial?.icon ?? presetFor(type).icon,
       target: showTarget && target ? Number(target) : undefined,
       targetUnit: showTarget && targetUnit ? targetUnit : undefined,
-      categoryOptions: type === "category" ? initial?.categoryOptions ?? preset.categoryOptions : undefined,
+      categoryOptions: type === "category" ? cleanedCategories : undefined,
       frequency,
       activeDays: frequency === "custom" ? activeDays : undefined,
     });
@@ -1118,6 +1127,29 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
             <input value={targetUnit} onChange={(e) => setTargetUnit(e.target.value)} placeholder={type === "duration" ? "min" : "glasses"} className="w-full rounded-lg border bg-[var(--card)] px-3 py-2 text-sm" />
           </Field>
         </div>
+      ) : null}
+
+      {type === "category" ? (
+        <Field label="Categories">
+          <div className="flex flex-col gap-1.5">
+            {categoryOptions.map((opt, i) => (
+              <div key={opt.id} className="flex items-center gap-2">
+                <input
+                  value={opt.label}
+                  onChange={(e) => setCategoryOptions((prev) => prev.map((o) => (o.id === opt.id ? { ...o, label: e.target.value } : o)))}
+                  placeholder={`Option ${i + 1}`}
+                  className="flex-1 rounded-lg border bg-[var(--card)] px-3 py-2 text-sm"
+                />
+                <button type="button" aria-label={`Remove option ${i + 1}`} onClick={() => setCategoryOptions((prev) => prev.filter((o) => o.id !== opt.id))} className="rounded-lg bg-[var(--secondary)] px-2.5 py-2 text-[var(--color-muted)]">
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setCategoryOptions((prev) => [...prev, { id: newId(), label: "" }])} className="self-start rounded-lg bg-[var(--secondary)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)]">
+              + Add option
+            </button>
+          </div>
+        </Field>
       ) : null}
 
       <Field label="Color">
