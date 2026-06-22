@@ -7,7 +7,11 @@ export function Sidebar({ onNewHabit }: { onNewHabit: () => void }) {
   return (
     <aside className="hidden w-[200px] shrink-0 flex-col border-r bg-[var(--card)] p-3 md:flex">
       <div className="flex items-center gap-2 px-2 pb-4 pt-1">
-        <span className="h-5 w-5 rounded-md bg-[var(--primary)]" />
+        <img
+          src={`${import.meta.env.BASE_URL}habit-tracker-logo.png`}
+          alt=""
+          className="h-6 w-6 rounded-md"
+        />
         <span className="text-sm font-bold">Habit Tracker</span>
       </div>
       <nav className="flex flex-col gap-1">
