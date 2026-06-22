@@ -1,11 +1,14 @@
-export type HabitType = "boolean" | "number" | "duration" | "time" | "category";
-export type HabitFrequency = "daily" | "custom"; // "weekly" reserved for later
+export type HabitType = "yes_no" | "number" | "duration" | "rating";
 
-export interface CategoryOption {
-  id: string;
-  label: string;
-  color?: string;
-}
+export type RatingValue = "low" | "okay" | "great";
+
+export type IntendedRhythm =
+  | "daily"
+  | "weekly"
+  | "multiple_per_week"
+  | "whenever";
+
+export type StreakType = "daily" | "weekly" | "none";
 
 export interface Habit {
   id: string;
@@ -14,30 +17,35 @@ export interface Habit {
   type: HabitType;
   color: string;
   icon?: string; // Lucide icon name
-  target?: number;
-  targetUnit?: string;
-  categoryOptions?: CategoryOption[];
-  frequency: HabitFrequency;
-  activeDays?: number[]; // 0=Sun..6=Sat, used when frequency === "custom"
+  target?: number; // number: count · duration: minutes
+  unit?: string; // number only; duration is always "minutes"
+  intendedRhythm: IntendedRhythm;
+  intendedCountPerWeek?: number; // used when intendedRhythm === "multiple_per_week"
+  streakType: StreakType;
   createdAt: string; // ISO timestamp
   archivedAt?: string | null;
 }
 
-export type HabitEntryValue = boolean | number | string;
+export type HabitEntryValue = boolean | number | RatingValue;
 
 export interface HabitEntry {
   id: string;
   habitId: string;
   date: string; // "YYYY-MM-DD" local day key
-  value: HabitEntryValue;
+  value: HabitEntryValue; // rating stored as literal "low" | "okay" | "great"
   note?: string;
-  createdAt: string; // ISO timestamp
-  updatedAt: string; // ISO timestamp
+  createdAt: string;
+  updatedAt: string;
 }
 
+export type StreakStatus =
+  | { type: "daily"; count: number; todayLogged: boolean }
+  | { type: "weekly"; count: number; thisWeek: number; required: number; met: boolean }
+  | { type: "none" };
+
 export interface HabitStats {
-  currentStreak: number;
-  longestStreak: number;
+  streak: StreakStatus;
+  longestStreak: number; // daily: days · weekly: weeks · none: 0
   completionRate7Days: number; // 0..1
   completionRate30Days: number; // 0..1
   totalCompletions: number;
