@@ -15,6 +15,10 @@ interface Props {
 
 export function HabitCard({ habit, entry, streak, onLog }: Props) {
   const done = isHabitCompleted(habit, entry);
+  // Multi-chip controls are too wide to share a row with the name on mobile,
+  // so they drop to their own full-width row beneath it. Compact controls
+  // (boolean toggle, number stepper, time) stay inline.
+  const controlBelow = habit.type === "duration" || habit.type === "category";
   const subtitle =
     entry !== undefined
       ? formatValue(habit, entry.value)
@@ -22,25 +26,31 @@ export function HabitCard({ habit, entry, streak, onLog }: Props) {
         ? `Goal ${habit.target}${habit.targetUnit ? ` ${habit.targetUnit}` : ""}`
         : habit.description ?? "";
 
+  const control = <HabitLogControl habit={habit} value={entry?.value} onChange={onLog} />;
+
   return (
-    <div className={cn("flex items-center gap-3 rounded-2xl border bg-[var(--card)] p-3", done && "border-[var(--success-soft)]")}>
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${habit.color}1a`, color: habit.color }}>
-        <HabitIcon name={habit.icon} className="h-5 w-5" />
-      </div>
-      <Link to={`/habits/${habit.id}`} className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-[var(--foreground)]">{habit.name}</div>
-        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
-          {streak > 0 ? (
-            <span className="inline-flex items-center gap-0.5">
-              <Flame className="h-3 w-3 text-[#E8A23D]" /> {streak}
-            </span>
-          ) : null}
-          <span className="truncate">{subtitle}</span>
+    <div className={cn("rounded-2xl border bg-[var(--card)] p-3", done && "border-[var(--success-soft)]")}>
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+          style={{ backgroundColor: `${habit.color}1a`, color: habit.color }}
+        >
+          <HabitIcon name={habit.icon} className="h-5 w-5" />
         </div>
-      </Link>
-      <div className="shrink-0">
-        <HabitLogControl habit={habit} value={entry?.value} onChange={onLog} />
+        <Link to={`/habits/${habit.id}`} className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-[var(--foreground)]">{habit.name}</div>
+          <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+            {streak > 0 ? (
+              <span className="inline-flex items-center gap-0.5">
+                <Flame className="h-3 w-3 text-[#E8A23D]" /> {streak}
+              </span>
+            ) : null}
+            <span className="truncate">{subtitle}</span>
+          </div>
+        </Link>
+        {!controlBelow ? <div className="shrink-0">{control}</div> : null}
       </div>
+      {controlBelow ? <div className="mt-3">{control}</div> : null}
     </div>
   );
 }
