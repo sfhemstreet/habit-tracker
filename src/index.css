@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --radius: 0.9rem;
+}
+
+:root {
+  /* shadcn semantic tokens — Cool Mist (light only) */
+  --background: #f4f6fa;
+  --foreground: #1e2230;
+  --card: #ffffff;
+  --card-foreground: #1e2230;
+  --popover: #ffffff;
+  --popover-foreground: #1e2230;
+  --primary: #5b6cf0;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f6;
+  --secondary-foreground: #1e2230;
+  --muted: #eef1f6;
+  --muted-foreground: #7a8194;
+  --accent: #e7eafd;
+  --accent-foreground: #1e2230;
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
+  --border: #eef1f6;
+  --input: #e6e9f1;
+  --ring: #5b6cf0;
+
+  /* app-specific tokens (referenced via arbitrary var() classes) */
+  --line: #eef1f6;
+  --success: #0e9f77;
+  --success-soft: #e2f3ec;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+* {
+  border-color: var(--border);
+  outline-color: var(--ring);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

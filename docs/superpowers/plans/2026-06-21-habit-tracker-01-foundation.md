@@ -56,14 +56,16 @@ npm create vite@latest . -- --template react-ts
 ```bash
 echo "22" > .nvmrc
 npm install react-router-dom@^6 zustand@^5
-npm install -D vitest@^2 jsdom@^25 @testing-library/react@^16 @testing-library/jest-dom@^6 @testing-library/user-event@^14
+# vitest must match the scaffolded Vite major (this timeline ships Vite 8 → vitest 4).
+# Pin to the latest vitest rather than a fixed major to avoid a bundled-vite type clash.
+npm install -D vitest@latest jsdom@^25 @testing-library/react@^16 @testing-library/jest-dom@^6 @testing-library/user-event@^14
 ```
 
 - [ ] **Step 3: Write `vite.config.ts`** (relative base for Electron/file://, plus Vitest config)
 
 ```ts
-/// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+// Import defineConfig from vitest/config (not "vite") so the `test` field typechecks under `tsc -b`.
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
