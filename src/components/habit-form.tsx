@@ -5,6 +5,7 @@ import type { AddHabitInput } from "@/store/habit-store";
 import { newId } from "@/lib/id";
 import { presetFor } from "@/lib/habit-presets";
 import { HABIT_COLORS } from "@/lib/color-palette";
+import { HABIT_ICONS } from "@/lib/habit-icons";
 import { cn } from "@/lib/utils";
 
 const TYPE_LABELS: Record<HabitType, string> = {
@@ -29,6 +30,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
   const [description, setDescription] = useState(initial?.description ?? "");
   const [type, setType] = useState<HabitType>(initial?.type ?? "boolean");
   const [color, setColor] = useState(initial?.color ?? HABIT_COLORS[0]);
+  const [icon, setIcon] = useState<string>(initial?.icon ?? presetFor(type).icon ?? "check");
   const [target, setTarget] = useState<string>(initial?.target?.toString() ?? "");
   const [targetUnit, setTargetUnit] = useState(initial?.targetUnit ?? "");
   const [frequency, setFrequency] = useState<HabitFrequency>(initial?.frequency ?? "daily");
@@ -42,6 +44,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
     if (initial) return;
     const p = presetFor(t);
     setColor(p.color);
+    setIcon(p.icon ?? "check");
     setTarget(p.target?.toString() ?? "");
     setTargetUnit(p.targetUnit ?? "");
     setCategoryOptions(t === "category" ? (p.categoryOptions ?? []) : []);
@@ -66,7 +69,7 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
       description: description.trim() || undefined,
       type,
       color,
-      icon: initial?.icon ?? presetFor(type).icon,
+      icon,
       target: showTarget && target ? Number(target) : undefined,
       targetUnit: showTarget && targetUnit ? targetUnit : undefined,
       categoryOptions: type === "category" ? cleanedCategories : undefined,
@@ -131,10 +134,51 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
       ) : null}
 
       <Field label="Color">
-        <div className="flex flex-wrap gap-2">
-          {HABIT_COLORS.map((c) => (
-            <button key={c} type="button" aria-label={`Color ${c}`} onClick={() => setColor(c)} className={cn("h-7 w-7 rounded-full border-2", color === c ? "border-[var(--foreground)]" : "border-transparent")} style={{ backgroundColor: c }} />
-          ))}
+        <div className="flex flex-wrap gap-2.5">
+          {HABIT_COLORS.map((c) => {
+            const selected = color === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Color ${c}`}
+                aria-pressed={selected}
+                onClick={() => setColor(c)}
+                className="h-8 w-8 rounded-full transition-transform"
+                style={{
+                  backgroundColor: c,
+                  boxShadow: selected
+                    ? `0 0 0 2px var(--card), 0 0 0 4px color-mix(in srgb, ${c}, #000 35%)`
+                    : "inset 0 0 0 1px rgba(0,0,0,0.08)",
+                  transform: selected ? "scale(1.08)" : undefined,
+                }}
+              />
+            );
+          })}
+        </div>
+      </Field>
+
+      <Field label="Icon">
+        <div className="grid max-h-44 grid-cols-8 gap-1.5 overflow-y-auto rounded-lg border bg-[var(--card)] p-2">
+          {HABIT_ICONS.map(({ name, Icon }) => {
+            const selected = icon === name;
+            return (
+              <button
+                key={name}
+                type="button"
+                aria-label={name}
+                aria-pressed={selected}
+                onClick={() => setIcon(name)}
+                className={cn(
+                  "flex aspect-square items-center justify-center rounded-md transition-colors",
+                  !selected && "bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+                )}
+                style={selected ? { backgroundColor: color, color: "#fff" } : undefined}
+              >
+                <Icon className="h-4 w-4" />
+              </button>
+            );
+          })}
         </div>
       </Field>
 
