@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import type { Habit, HabitEntry } from "@/lib/types";
-import { buildTrendSeries, buildCategoryDistribution } from "@/lib/chart-data";
+import { buildTrendSeries, buildRatingDistribution } from "@/lib/chart-data";
 import { todayKey } from "@/lib/date-utils";
 import { EmptyState } from "./empty-state";
 
@@ -14,8 +14,8 @@ export function TrendChart({ habit, entries }: { habit: Habit; entries: HabitEnt
     return <EmptyState title="No data yet" description="Log this habit a few times to see trends here." />;
   }
 
-  if (habit.type === "category") {
-    const data = buildCategoryDistribution(habit, entries);
+  if (habit.type === "rating") {
+    const data = buildRatingDistribution(habit, entries);
     return (
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data}>
@@ -32,7 +32,7 @@ export function TrendChart({ habit, entries }: { habit: Habit; entries: HabitEnt
   const series = buildTrendSeries(habit, entries, 30, today);
   const tickLabel = (d: string) => d.slice(5); // MM-DD
 
-  if (habit.type === "boolean") {
+  if (habit.type === "yes_no") {
     return (
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={series}>
