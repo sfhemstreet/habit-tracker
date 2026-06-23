@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, Pencil, Archive } from "lucide-react";
 import { useHabitStore } from "@/store/habit-store";
 import { computeStats, formatValue } from "@/lib/habit-utils";
-import { todayKey } from "@/lib/date-utils";
+import { todayKey, addDays } from "@/lib/date-utils";
 import { StatsCard } from "@/components/stats-card";
 import { HabitHeatmap } from "@/components/habit-heatmap";
 import { TrendChart } from "@/components/trend-chart";
@@ -16,6 +16,7 @@ export default function HabitDetailRoute() {
   const habits = useHabitStore((s) => s.habits);
   const entries = useHabitStore((s) => s.entries);
   const archiveHabit = useHabitStore((s) => s.archiveHabit);
+  const settings = useHabitStore((s) => s.settings);
   const [editing, setEditing] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
 
@@ -33,8 +34,13 @@ export default function HabitDetailRoute() {
     );
   }
 
-  const stats = computeStats(habit, habitEntries, todayKey());
+  const stats = computeStats(habit, habitEntries, todayKey(), settings);
   const pct = (n: number) => `${Math.round(n * 100)}%`;
+
+  const weekAgo = addDays(todayKey(), -6);
+  const thisWeekCount = habitEntries.filter((e) => e.date >= weekAgo && e.date <= todayKey()).length;
+
+  const gridCols = stats.streak.type === "daily" ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2";
 
   return (
     <div className="flex flex-col gap-4">
@@ -56,13 +62,29 @@ export default function HabitDetailRoute() {
         ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <StatsCard label="Current streak" value={`${stats.currentStreak}`} hint="days" />
-        <StatsCard label="Longest streak" value={`${stats.longestStreak}`} hint="days" />
-        <StatsCard label="7-day" value={pct(stats.completionRate7Days)} />
-        <StatsCard label="30-day" value={pct(stats.completionRate30Days)} />
-        <StatsCard label="Total" value={`${stats.totalCompletions}`} hint="completions" />
-        <StatsCard label="Missed" value={`${stats.missedDays}`} hint="days" />
+      <div className={`grid ${gridCols} gap-2`}>
+        {stats.streak.type === "daily" ? (
+          <>
+            <StatsCard label="Current streak" value={`${stats.streak.count}`} hint="days" />
+            <StatsCard label="Longest streak" value={`${stats.longestStreak}`} hint="days" />
+            <StatsCard label="7-day" value={pct(stats.completionRate7Days)} />
+            <StatsCard label="30-day" value={pct(stats.completionRate30Days)} />
+            <StatsCard label="Total" value={`${stats.totalCompletions}`} hint="completions" />
+            <StatsCard label="Missed" value={`${stats.missedDays}`} hint="days" />
+          </>
+        ) : stats.streak.type === "weekly" ? (
+          <>
+            <StatsCard label="Current streak" value={`${stats.streak.count}`} hint="weeks" />
+            <StatsCard label="Longest streak" value={`${stats.longestStreak}`} hint="weeks" />
+            <StatsCard label="This week" value={`${stats.streak.thisWeek}/${stats.streak.required}`} hint="logged" />
+            <StatsCard label="Total" value={`${stats.totalCompletions}`} hint="sessions" />
+          </>
+        ) : (
+          <>
+            <StatsCard label="Total" value={`${stats.totalCompletions}`} hint="check-ins" />
+            <StatsCard label="Last 7 days" value={`${thisWeekCount}`} hint="entries" />
+          </>
+        )}
       </div>
 
       <section className="rounded-2xl border bg-[var(--card)] p-4">

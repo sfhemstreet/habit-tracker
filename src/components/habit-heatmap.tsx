@@ -1,6 +1,6 @@
 import type { Habit, HabitEntry } from "@/lib/types";
 import { addDays, todayKey, eachDayInRange, startOfWeekKey, formatLongDate } from "@/lib/date-utils";
-import { isHabitCompleted, isScheduledOn } from "@/lib/habit-utils";
+import { isHabitCompleted } from "@/lib/habit-utils";
 
 interface Props {
   habit: Habit;
@@ -19,7 +19,6 @@ export function HabitHeatmap({ habit, entries, weeks = 16 }: Props) {
   for (let i = 0; i < days.length; i += 7) columns.push(days.slice(i, i + 7));
 
   function tint(day: string): string {
-    if (!isScheduledOn(habit, day)) return "var(--line)";
     if (isHabitCompleted(habit, byDate.get(day))) return habit.color;
     return "var(--secondary)";
   }

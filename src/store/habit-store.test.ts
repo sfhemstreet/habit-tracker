@@ -23,9 +23,10 @@ describe("habit CRUD", () => {
     const store = createHabitStore();
     const h = store.getState().addHabit({
       name: "Stretch",
-      type: "boolean",
+      type: "yes_no",
       color: "#0E9F77",
-      frequency: "daily",
+      intendedRhythm: "daily",
+      streakType: "daily",
     });
     expect(store.getState().habits.some((x) => x.id === h.id)).toBe(true);
     expect(loadData().habits.some((x) => x.id === h.id)).toBe(true);
@@ -55,6 +56,16 @@ describe("habit CRUD", () => {
     expect(store.getState().habits.some((x) => x.id === h.id)).toBe(false);
     expect(store.getState().getEntriesForHabit(h.id)).toHaveLength(0);
   });
+
+  it("addHabit persists rhythm + streak fields", () => {
+    const store = createHabitStore();
+    const h = store.getState().addHabit({
+      name: "Meditate", type: "yes_no", color: "#000",
+      intendedRhythm: "daily", streakType: "daily",
+    });
+    expect(h.intendedRhythm).toBe("daily");
+    expect(h.streakType).toBe("daily");
+  });
 });
 
 describe("entries", () => {
@@ -80,7 +91,7 @@ describe("entries", () => {
 describe("data management", () => {
   it("export → import round-trips", () => {
     const store = createHabitStore();
-    store.getState().addHabit({ name: "X", type: "boolean", color: "#000", frequency: "daily" });
+    store.getState().addHabit({ name: "X", type: "yes_no", color: "#000", intendedRhythm: "daily", streakType: "daily" });
     const json = store.getState().exportData();
 
     const other = createHabitStore();
