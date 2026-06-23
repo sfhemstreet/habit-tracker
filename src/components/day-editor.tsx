@@ -1,6 +1,5 @@
 import type { Habit, HabitEntry, HabitEntryValue } from "@/lib/types";
 import { formatLongDate } from "@/lib/date-utils";
-import { isScheduledOn } from "@/lib/habit-utils";
 import { HabitIcon } from "./habit-icon";
 import { HabitLogControl } from "./habit-log-control";
 
@@ -12,15 +11,15 @@ interface Props {
 }
 
 export function DayEditor({ dateKey, habits, entries, onLog }: Props) {
-  const scheduled = habits.filter((h) => !h.archivedAt && isScheduledOn(h, dateKey));
+  const shown = habits.filter((h) => !h.archivedAt);
   return (
     <div className="rounded-2xl border bg-[var(--card)] p-4">
       <h2 className="mb-3 text-sm font-semibold">{formatLongDate(dateKey)}</h2>
-      {scheduled.length === 0 ? (
-        <p className="text-sm text-[var(--muted-foreground)]">No habits scheduled this day.</p>
+      {shown.length === 0 ? (
+        <p className="text-sm text-[var(--muted-foreground)]">No habits yet.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {scheduled.map((h) => {
+          {shown.map((h) => {
             const entry = entries.find((e) => e.habitId === h.id && e.date === dateKey);
             return (
               <div key={h.id} className="flex items-center gap-3 rounded-xl border p-2.5">

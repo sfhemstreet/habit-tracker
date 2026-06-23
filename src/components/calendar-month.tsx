@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Habit, HabitEntry } from "@/lib/types";
 import { buildMonthGrid, monthLabel, shiftMonth } from "@/lib/calendar-utils";
 import { isFuture, parseDayKey, todayKey } from "@/lib/date-utils";
-import { isHabitCompleted, isScheduledOn } from "@/lib/habit-utils";
+import { isHabitCompleted } from "@/lib/habit-utils";
 import { CalendarDayCell } from "./calendar-day-cell";
 
 const HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -22,12 +22,12 @@ export function CalendarMonth({ anchorKey, onAnchorChange, habits, entries, sele
   const active = habits.filter((h) => !h.archivedAt);
 
   function ratioForDay(day: string): number {
-    const scheduled = active.filter((h) => isScheduledOn(h, day));
-    if (scheduled.length === 0) return 0;
-    const done = scheduled.filter((h) =>
+    const relevant = active.filter((h) => h.intendedRhythm === "daily");
+    if (relevant.length === 0) return 0;
+    const done = relevant.filter((h) =>
       isHabitCompleted(h, entries.find((e) => e.habitId === h.id && e.date === day)),
     ).length;
-    return done / scheduled.length;
+    return done / relevant.length;
   }
 
   return (
