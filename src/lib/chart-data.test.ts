@@ -1,54 +1,36 @@
 import { describe, it, expect } from "vitest";
+import { buildRatingDistribution, buildTrendSeries } from "./chart-data";
 import type { Habit, HabitEntry } from "./types";
-import { buildTrendSeries, buildCategoryDistribution } from "./chart-data";
 
-function habit(p: Partial<Habit>): Habit {
-  return {
-    id: "h1", name: "T", type: "number", color: "#000",
-    frequency: "daily", createdAt: "2026-06-01T00:00:00Z", archivedAt: null, ...p,
-  };
+function h(p: Partial<Habit>): Habit {
+  return { id: "h", name: "H", type: "rating", color: "#000",
+    intendedRhythm: "whenever", streakType: "none",
+    createdAt: "2026-06-01T08:00:00.000Z", archivedAt: null, ...p };
 }
-const entry = (date: string, value: HabitEntry["value"]): HabitEntry => ({
-  id: date, habitId: "h1", date, value, createdAt: date, updatedAt: date,
-});
+function e(date: string, value: HabitEntry["value"]): HabitEntry {
+  return { id: date, habitId: "h", date, value, createdAt: "x", updatedAt: "x" };
+}
 
-describe("buildTrendSeries (number/duration/time/boolean)", () => {
-  it("returns one point per day in the window with numeric y for numbers", () => {
-    const h = habit({ type: "number" });
-    const series = buildTrendSeries(h, [entry("2026-06-20", 5)], 7, "2026-06-21");
-    expect(series).toHaveLength(7);
-    const last = series[series.length - 1];
-    expect(last.date).toBe("2026-06-21");
-    const logged = series.find((p) => p.date === "2026-06-20");
-    expect(logged?.value).toBe(5);
-  });
-
-  it("maps time values to minutes-since-midnight", () => {
-    const h = habit({ type: "time" });
-    const series = buildTrendSeries(h, [entry("2026-06-21", "23:20")], 7, "2026-06-21");
-    expect(series.find((p) => p.date === "2026-06-21")?.value).toBe(23 * 60 + 20);
-  });
-
-  it("maps boolean completion to 1/0", () => {
-    const h = habit({ type: "boolean" });
-    const series = buildTrendSeries(h, [entry("2026-06-21", true)], 7, "2026-06-21");
-    expect(series.find((p) => p.date === "2026-06-21")?.value).toBe(1);
-    expect(series.find((p) => p.date === "2026-06-20")?.value).toBe(0);
+describe("buildRatingDistribution", () => {
+  it("counts low/okay/great in fixed order", () => {
+    const d = buildRatingDistribution(h({}), [e("2026-06-01", "great"), e("2026-06-02", "great"), e("2026-06-03", "low")]);
+    expect(d).toEqual([
+      { label: "Low", value: "low", count: 1 },
+      { label: "Okay", value: "okay", count: 0 },
+      { label: "Great", value: "great", count: 2 },
+    ]);
   });
 });
 
-describe("buildCategoryDistribution", () => {
-  it("counts entries per category label", () => {
-    const h = habit({
-      type: "category",
-      categoryOptions: [{ id: "a", label: "Strength" }, { id: "b", label: "Cardio" }],
-    });
-    const dist = buildCategoryDistribution(h, [
-      entry("2026-06-19", "a"), entry("2026-06-20", "a"), entry("2026-06-21", "b"),
-    ]);
-    expect(dist).toEqual([
-      { label: "Strength", count: 2 },
-      { label: "Cardio", count: 1 },
-    ]);
+describe("buildTrendSeries v2", () => {
+  it("duration → numeric minutes; missing day → 0", () => {
+    const habit = h({ type: "duration", streakType: "daily", intendedRhythm: "daily" });
+    const s = buildTrendSeries(habit, [e("2026-06-03", 20)], 3, "2026-06-03");
+    expect(s.map((p) => p.value)).toEqual([0, 0, 20]);
+  });
+  it("yes_no → 0/1 completion", () => {
+    const habit = h({ type: "yes_no", streakType: "daily", intendedRhythm: "daily" });
+    const s = buildTrendSeries(habit, [e("2026-06-03", true)], 2, "2026-06-03");
+    expect(s.map((p) => p.value)).toEqual([0, 1]);
   });
 });
