@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 interface Props {
   habit: Habit;
   entry?: HabitEntry;
-  streak: StreakStatus;
+  /** Today-relative streak. Omit (e.g. on the calendar's day editor) to hide the streak line. */
+  streak?: StreakStatus;
   onLog: (value: HabitEntryValue) => void;
 }
 
@@ -32,7 +33,7 @@ export function HabitCard({ habit, entry, streak, onLog }: Props) {
   const done = isHabitCompleted(habit, entry);
   // Rating's three buttons are the only control wide enough to wrap on mobile.
   const controlBelow = habit.type === "rating";
-  const line = streakLine(streak);
+  const line = streak ? streakLine(streak) : null;
   const subtitle =
     entry !== undefined
       ? formatValue(habit, entry.value)
