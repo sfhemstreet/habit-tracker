@@ -39,4 +39,14 @@ describe("HabitLogControl v2", () => {
     fireEvent.click(screen.getByRole("button", { name: "Great" }));
     expect(onChange).toHaveBeenCalledWith("great");
   });
+
+  it("number: clearing the field does not persist a 0", () => {
+    const onChange = vi.fn();
+    render(<HabitLogControl habit={h({ type: "number", unit: "pushups" })} value={15} onChange={onChange} />);
+    const input = screen.getByRole("spinbutton");
+    fireEvent.change(input, { target: { value: "" } });
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.change(input, { target: { value: "20" } });
+    expect(onChange).toHaveBeenLastCalledWith(20);
+  });
 });

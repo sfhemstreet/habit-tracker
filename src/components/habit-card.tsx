@@ -16,10 +16,13 @@ interface Props {
 function streakLine(streak: StreakStatus): { flame: boolean; text: string } | null {
   switch (streak.type) {
     case "daily":
-      if (streak.count > 0) return { flame: true, text: `${streak.count} day${streak.count === 1 ? "" : "s"}` };
+      if (streak.count > 0)
+        return { flame: true, text: `${streak.count} day${streak.count === 1 ? "" : "s"}${streak.todayLogged ? "" : " · log today"}` };
       return streak.todayLogged ? null : { flame: false, text: "Today not logged yet" };
     case "weekly":
-      return { flame: streak.count > 0, text: `${streak.count} week${streak.count === 1 ? "" : "s"} · ${streak.thisWeek} of ${streak.required} this week` };
+      if (streak.count > 0)
+        return { flame: true, text: `${streak.count} week${streak.count === 1 ? "" : "s"} · ${streak.thisWeek} of ${streak.required} this week` };
+      return { flame: false, text: `${streak.thisWeek} of ${streak.required} this week` };
     case "none":
       return null;
   }

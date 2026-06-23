@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Check } from "lucide-react";
 import type { Habit, HabitEntryValue, RatingValue } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -33,29 +34,8 @@ export function HabitLogControl({ habit, value, onChange }: Props) {
       );
     }
     case "number":
-    case "duration": {
-      const n = typeof value === "number" ? value : "";
-      const unit = habit.type === "duration" ? "minutes" : (habit.unit ?? "");
-      return (
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            aria-label={habit.name}
-            value={n}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === "") { onChange(0); return; }
-              const parsed = Number(raw);
-              if (!Number.isNaN(parsed)) onChange(parsed);
-            }}
-            className="w-16 rounded-lg border bg-[var(--card)] px-2 py-1 text-sm tabular-nums"
-          />
-          {unit ? <span className="text-xs text-[var(--muted-foreground)]">{unit}</span> : null}
-        </div>
-      );
-    }
+    case "duration":
+      return <NumberDurationInput habit={habit} value={value} onChange={onChange} />;
     case "rating": {
       return (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -79,4 +59,36 @@ export function HabitLogControl({ habit, value, onChange }: Props) {
     default:
       return null;
   }
+}
+
+function NumberDurationInput({ habit, value, onChange }: Props) {
+  const unit = habit.type === "duration" ? "minutes" : (habit.unit ?? "");
+  const [text, setText] = useState(typeof value === "number" ? String(value) : "");
+  const [lastValue, setLastValue] = useState(value);
+  // Sync the field when the parent value changes externally (e.g. switching days),
+  // using the set-state-during-render pattern instead of a useEffect.
+  if (value !== lastValue) {
+    setLastValue(value);
+    setText(typeof value === "number" ? String(value) : "");
+  }
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        aria-label={habit.name}
+        value={text}
+        onChange={(e) => {
+          const raw = e.target.value;
+          setText(raw);
+          if (raw === "") return; // an empty field is a mid-edit state, not a logged 0
+          const parsed = Number(raw);
+          if (!Number.isNaN(parsed) && parsed >= 0) onChange(parsed);
+        }}
+        className="w-16 rounded-lg border bg-[var(--card)] px-2 py-1 text-sm tabular-nums"
+      />
+      {unit ? <span className="text-xs text-[var(--muted-foreground)]">{unit}</span> : null}
+    </div>
+  );
 }
