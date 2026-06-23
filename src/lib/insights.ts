@@ -1,16 +1,13 @@
 import type { AppSettings, Habit, HabitEntry } from "./types";
-import {
-  completionRate,
-  currentStreak,
-  isHabitCompleted,
-  isScheduledOn,
-} from "./habit-utils";
-import { addDays, eachDayInRange, isFuture, toDayKey, todayKey } from "./date-utils";
+import { completionRate, isHabitCompleted, streakStatus } from "./habit-utils";
+import { buildRatingDistribution } from "./chart-data";
+import { addDays, eachDayInRange, todayKey } from "./date-utils";
 
 export type InsightKind =
   | "streak-celebration"
+  | "weekly-rhythm"
+  | "rating-summary"
   | "lower-target"
-  | "stack-habit"
   | "simplify";
 
 export interface Insight {
@@ -22,12 +19,18 @@ export interface Insight {
   tone: "positive" | "suggestion";
 }
 
+export interface ActiveStreak {
+  habitId: string;
+  streak: number;
+  unit: "days" | "weeks";
+}
+
 export interface WeeklyReview {
-  consistency: number; // 0..1 across all habits this week
+  consistency: number; // 0..1 across daily habits this week
   bestHabitId: string | null;
   frictionHabitId: string | null;
   missedDays: number;
-  activeStreaks: { habitId: string; streak: number }[];
+  activeStreaks: ActiveStreak[];
   insights: Insight[];
 }
 
@@ -38,117 +41,128 @@ function entriesFor(habitId: string, entries: HabitEntry[]): HabitEntry[] {
 function missesInLast7(habit: Habit, entries: HabitEntry[], todayK: string): number {
   const byDate = new Map(entries.map((e) => [e.date, e]));
   const yesterday = addDays(todayK, -1);
-  const startDay = toDayKey(new Date(habit.createdAt));
   let from = addDays(todayK, -7);
-  if (from < startDay) from = startDay;
+  const start = habit.createdAt.slice(0, 10);
+  if (from < start) from = start;
   let misses = 0;
   for (const day of eachDayInRange(from, yesterday)) {
-    if (!isScheduledOn(habit, day)) continue;
     if (!isHabitCompleted(habit, byDate.get(day))) misses += 1;
   }
   return misses;
+}
+
+function ratingSummary(habit: Habit, entries: HabitEntry[], todayK: string): Insight | null {
+  const from = addDays(todayK, -6);
+  const recent = entries.filter((e) => e.date >= from && e.date <= todayK);
+  if (recent.length === 0) return null;
+  const dist = buildRatingDistribution(habit, recent);
+  const total = dist.reduce((s, d) => s + d.count, 0);
+  if (total === 0) return null;
+  const top = dist.reduce((a, b) => (b.count > a.count ? b : a));
+  const mostly = top.count / total >= 0.6;
+  return {
+    id: `rating-${habit.id}`,
+    kind: "rating-summary",
+    habitId: habit.id,
+    title: `${habit.name} this week`,
+    message: mostly
+      ? `${habit.name} was mostly ${top.label} this week.`
+      : `${habit.name} was mixed this week.`,
+    tone: "positive",
+  };
 }
 
 export function buildWeeklyReview(
   habits: Habit[],
   entries: HabitEntry[],
   todayK: string = todayKey(),
-  _settings: AppSettings = { weekStartsOn: 1 },
+  settings: AppSettings = { weekStartsOn: 1 },
 ): WeeklyReview {
   const active = habits.filter((h) => !h.archivedAt);
   const insights: Insight[] = [];
-  const activeStreaks: { habitId: string; streak: number }[] = [];
+  const activeStreaks: ActiveStreak[] = [];
 
   let bestHabitId: string | null = null;
   let frictionHabitId: string | null = null;
   let bestRate = -1;
   let worstRate = Infinity;
 
-  let totalScheduled = 0;
-  let totalCompleted = 0;
-  let totalMissed = 0;
-
-  const byDate = (id: string) => new Map(entriesFor(id, entries).map((e) => [e.date, e]));
+  let totalDays = 0;
+  let completedDays = 0;
+  let missed = 0;
 
   for (const h of active) {
     const hEntries = entriesFor(h.id, entries);
-    const rate = completionRate(h, hEntries, 7, todayK);
-    const streak = currentStreak(h, hEntries, todayK);
-    if (streak > 0) activeStreaks.push({ habitId: h.id, streak });
+    const status = streakStatus(h, hEntries, todayK, settings);
 
-    if (rate > bestRate) {
-      bestRate = rate;
-      bestHabitId = h.id;
-    }
-    if (rate < worstRate) {
-      worstRate = rate;
-      frictionHabitId = h.id;
+    if (status.type === "daily" && status.count > 0) {
+      activeStreaks.push({ habitId: h.id, streak: status.count, unit: "days" });
+    } else if (status.type === "weekly" && status.count > 0) {
+      activeStreaks.push({ habitId: h.id, streak: status.count, unit: "weeks" });
     }
 
-    // weekly consistency accumulation (this calendar-ish week = trailing 7 days)
-    const map = byDate(h.id);
-    for (const day of eachDayInRange(addDays(todayK, -6), todayK)) {
-      if (isFuture(day) || !isScheduledOn(h, day)) continue;
-      totalScheduled += 1;
-      if (isHabitCompleted(h, map.get(day))) totalCompleted += 1;
-      else if (day !== todayK) totalMissed += 1;
+    // best/friction + consistency only consider daily habits (rate is meaningful there)
+    if (h.streakType === "daily") {
+      const rate = completionRate(h, hEntries, 7, todayK);
+      if (rate > bestRate) { bestRate = rate; bestHabitId = h.id; }
+      if (rate < worstRate) { worstRate = rate; frictionHabitId = h.id; }
+      const byDate = new Map(hEntries.map((e) => [e.date, e]));
+      for (const day of eachDayInRange(addDays(todayK, -6), todayK)) {
+        totalDays += 1;
+        if (isHabitCompleted(h, byDate.get(day))) completedDays += 1;
+        else if (day !== todayK) missed += 1;
+      }
     }
 
-    // Rule: celebrate a streak that is a positive multiple of 7
-    if (streak > 0 && streak % 7 === 0) {
+    // Rule: celebrate daily streaks that are a positive multiple of 7
+    if (status.type === "daily" && status.count > 0 && status.count % 7 === 0) {
       insights.push({
-        id: `streak-${h.id}`,
-        kind: "streak-celebration",
-        habitId: h.id,
-        title: `${streak}-day streak on ${h.name}!`,
-        message: "Momentum is building. Keep it going.",
+        id: `streak-${h.id}`, kind: "streak-celebration", habitId: h.id,
+        title: `${status.count}-day streak on ${h.name}!`,
+        message: `${status.count} days and counting. Momentum is building.`, tone: "positive",
+      });
+    }
+
+    // Rule: celebrate weekly rhythm held for a multiple of 4 weeks
+    if (status.type === "weekly" && status.count > 0 && status.count % 4 === 0) {
+      insights.push({
+        id: `weekly-${h.id}`, kind: "weekly-rhythm", habitId: h.id,
+        title: `${h.name} is holding its rhythm`,
+        message: `${h.name} has hit its ${status.required}×/week rhythm for ${status.count} weeks in a row.`,
         tone: "positive",
       });
     }
 
-    // Rule: lower the target after >3 misses with a target
-    if (h.target && h.target > 0 && missesInLast7(h, hEntries, todayK) > 3) {
-      insights.push({
-        id: `lower-${h.id}`,
-        kind: "lower-target",
-        habitId: h.id,
-        title: `${h.name} may be too heavy`,
-        message: "Try lowering the target for next week.",
-        tone: "suggestion",
-      });
+    // Rule: rating habits get a neutral distribution summary
+    if (h.type === "rating") {
+      const ins = ratingSummary(h, hEntries, todayK);
+      if (ins) insights.push(ins);
     }
 
-    // Rule: inconsistent (30–70% over 14 days) → stack onto a routine
-    const rate14 = completionRate(h, hEntries, 14, todayK);
-    if (rate14 >= 0.3 && rate14 <= 0.7) {
+    // Rule: targeted habit missed >3 of last 7 → suggest lowering the target
+    if (h.streakType !== "none" && h.target && h.target > 0 && missesInLast7(h, hEntries, todayK) > 3) {
       insights.push({
-        id: `stack-${h.id}`,
-        kind: "stack-habit",
-        habitId: h.id,
-        title: `${h.name} is hit-or-miss`,
-        message: "Try attaching it to an existing routine to stay consistent.",
-        tone: "suggestion",
+        id: `lower-${h.id}`, kind: "lower-target", habitId: h.id,
+        title: `${h.name} may be too heavy`,
+        message: "Try lowering the target for next week.", tone: "suggestion",
       });
     }
   }
 
-  // Rule: too many habits scheduled today → simplify
-  const scheduledToday = active.filter((h) => isScheduledOn(h, todayK)).length;
-  if (scheduledToday > 8) {
+  // Rule: a lot of active habits → suggest simplifying
+  if (active.length > 8) {
     insights.push({
-      id: "simplify",
-      kind: "simplify",
-      title: "Your day looks heavy",
-      message: `${scheduledToday} habits scheduled today. Consider simplifying.`,
-      tone: "suggestion",
+      id: "simplify", kind: "simplify",
+      title: "Your tracker looks heavy",
+      message: `${active.length} active habits. Consider simplifying.`, tone: "suggestion",
     });
   }
 
   return {
-    consistency: totalScheduled === 0 ? 0 : totalCompleted / totalScheduled,
+    consistency: totalDays === 0 ? 0 : completedDays / totalDays,
     bestHabitId: active.length ? bestHabitId : null,
     frictionHabitId: active.length ? frictionHabitId : null,
-    missedDays: totalMissed,
+    missedDays: missed,
     activeStreaks,
     insights,
   };
