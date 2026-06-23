@@ -1,8 +1,6 @@
 import type { AppSettings, Habit, HabitEntry, HabitEntryValue, HabitStats, StreakStatus } from "./types";
 import { addDays, eachDayInRange, startOfWeekKey, toDayKey } from "./date-utils";
 
-const pad = (n: number) => String(n).padStart(2, "0");
-
 export function isHabitCompleted(habit: Habit, entry: HabitEntry | undefined): boolean {
   if (!entry) return false;
   const v = entry.value;
@@ -55,6 +53,7 @@ function requiredPerWeek(habit: Habit): number {
   if (habit.intendedRhythm === "multiple_per_week") {
     return Math.max(1, habit.intendedCountPerWeek ?? 1);
   }
+  // weekly/daily/whenever rhythms just need any one completion in the week
   return 1;
 }
 
@@ -199,6 +198,3 @@ export function formatValue(habit: Habit, value: HabitEntryValue): string {
       return String(value);
   }
 }
-
-// pad is kept to avoid unused-variable errors during the tsc-red window
-void pad;

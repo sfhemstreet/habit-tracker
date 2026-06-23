@@ -9,6 +9,7 @@ function habit(p: Partial<Habit>): Habit {
     createdAt: "2026-01-01T08:00:00.000Z", archivedAt: null, ...p,
   };
 }
+// Fixed-date helper — only use where the date is irrelevant (e.g. isHabitCompleted).
 function entry(value: HabitEntry["value"]): HabitEntry {
   return { id: "e", habitId: "h", date: "2026-06-01", value,
     createdAt: "x", updatedAt: "x" };
@@ -45,7 +46,7 @@ describe("isHabitCompleted v2", () => {
   });
 });
 
-import { streakStatus, longestStreak, computeStats, completionRate } from "./habit-utils";
+import { streakStatus, longestStreak, computeStats, completionRate, missedDays, totalCompletions, formatValue } from "./habit-utils";
 import type { AppSettings } from "./types";
 
 const MON: AppSettings = { weekStartsOn: 1 };
@@ -65,7 +66,7 @@ describe("streakStatus daily", () => {
   });
   it("a gap breaks the streak", () => {
     const s = streakStatus(h, [e("2026-06-07"), e("2026-06-09"), e("2026-06-10")], "2026-06-10", MON);
-    expect(s.type === "daily" && s.count).toBe(2);
+    expect(s).toEqual({ type: "daily", count: 2, todayLogged: true });
   });
 });
 
@@ -98,7 +99,7 @@ describe("streakStatus weekly", () => {
       v("2026-06-08"), v("2026-06-10"), // wk Jun8: 2 ✓
       v("2026-06-15"), v("2026-06-16"), // current: 2 ✓
     ], "2026-06-17", MON);
-    expect(s.type === "weekly" && s.count).toBe(2); // Jun8 + current, Jun1 breaks
+    expect(s).toEqual({ type: "weekly", count: 2, thisWeek: 2, required: 2, met: true });
   });
 });
 
@@ -118,5 +119,47 @@ describe("longestStreak", () => {
   it("none: 0", () => {
     const h = habit({ type: "rating", streakType: "none" });
     expect(longestStreak(h, [e("2026-06-01", "low")], "2026-06-05", MON)).toBe(0);
+  });
+  it("weekly: longest run of successful weeks", () => {
+    // required 1; weeks May25 ✓, Jun1 ✓, Jun8 ✗, Jun15(current) ✓ → longest run = 2
+    const h = habit({ type: "duration", streakType: "weekly", intendedRhythm: "weekly",
+      createdAt: "2026-05-25T08:00:00.000Z" });
+    const got = longestStreak(h, [e("2026-05-25", 30), e("2026-06-01", 30), e("2026-06-15", 30)], "2026-06-17", MON);
+    expect(got).toBe(2);
+  });
+});
+
+describe("aggregates v2", () => {
+  const daily = habit({ streakType: "daily", createdAt: "2026-06-01T08:00:00.000Z" });
+
+  it("completionRate: completed days / total days in window", () => {
+    const r = completionRate(daily, [e("2026-06-08"), e("2026-06-09"), e("2026-06-10")], 7, "2026-06-10");
+    expect(r).toBeCloseTo(3 / 7);
+  });
+
+  it("totalCompletions counts only completed entries", () => {
+    const yn = habit({ type: "yes_no" });
+    expect(totalCompletions(yn, [e("2026-06-01", true), e("2026-06-02", false), e("2026-06-03", true)])).toBe(2);
+  });
+
+  it("missedDays counts uncompleted days up to yesterday (today excluded)", () => {
+    // start 06-01, today 06-05; completed 06-02 & 06-04 → missed 06-01 & 06-03 = 2
+    expect(missedDays(daily, [e("2026-06-02"), e("2026-06-04")], "2026-06-05")).toBe(2);
+  });
+
+  it("formatValue renders each type", () => {
+    expect(formatValue(habit({ type: "yes_no" }), true)).toBe("Done");
+    expect(formatValue(habit({ type: "yes_no" }), false)).toBe("Not done");
+    expect(formatValue(habit({ type: "number", unit: "glasses" }), 8)).toBe("8 glasses");
+    expect(formatValue(habit({ type: "duration" }), 20)).toBe("20 minutes");
+    expect(formatValue(habit({ type: "rating", streakType: "none" }), "great")).toBe("Great");
+  });
+
+  it("computeStats returns a daily StreakStatus plus numeric aggregates", () => {
+    const stats = computeStats(daily, [e("2026-06-09"), e("2026-06-10")], "2026-06-10", MON);
+    expect(stats.streak.type).toBe("daily");
+    expect(stats.totalCompletions).toBe(2);
+    expect(typeof stats.completionRate7Days).toBe("number");
+    expect(typeof stats.completionRate30Days).toBe("number");
   });
 });
