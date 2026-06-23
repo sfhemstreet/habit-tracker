@@ -1,65 +1,42 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import type { Habit } from "@/lib/types";
 import { HabitLogControl } from "./habit-log-control";
+import type { Habit } from "@/lib/types";
 
-function habit(p: Partial<Habit>): Habit {
-  return {
-    id: "h1",
-    name: "Test",
-    type: "boolean",
-    color: "#5B6CF0",
-    frequency: "daily",
-    createdAt: "2026-06-01T00:00:00Z",
-    archivedAt: null,
-    ...p,
-  };
+function h(p: Partial<Habit>): Habit {
+  return { id: "h", name: "H", type: "yes_no", color: "#000",
+    intendedRhythm: "daily", streakType: "daily",
+    createdAt: "2026-06-01T08:00:00.000Z", archivedAt: null, ...p };
 }
 
-describe("HabitLogControl", () => {
-  it("boolean: clicking the toggle completes the habit", async () => {
+describe("HabitLogControl v2", () => {
+  it("yes_no toggles done", () => {
     const onChange = vi.fn();
-    render(<HabitLogControl habit={habit({ type: "boolean" })} onChange={onChange} />);
-    await userEvent.click(screen.getByRole("button", { name: /mark.*done|complete/i }));
+    render(<HabitLogControl habit={h({ type: "yes_no" })} onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button"));
     expect(onChange).toHaveBeenCalledWith(true);
   });
 
-  it("number: + increments from the current value", async () => {
+  it("number takes a typed value and shows the unit", () => {
     const onChange = vi.fn();
-    render(<HabitLogControl habit={habit({ type: "number", target: 8 })} value={5} onChange={onChange} />);
-    await userEvent.click(screen.getByRole("button", { name: /increase/i }));
-    expect(onChange).toHaveBeenCalledWith(6);
+    render(<HabitLogControl habit={h({ type: "number", unit: "pushups" })} onChange={onChange} />);
+    expect(screen.getByText("pushups")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "15" } });
+    expect(onChange).toHaveBeenLastCalledWith(15);
   });
 
-  it("number: − does not go below 0", async () => {
+  it("duration shows minutes and stores a number", () => {
     const onChange = vi.fn();
-    render(<HabitLogControl habit={habit({ type: "number" })} value={0} onChange={onChange} />);
-    await userEvent.click(screen.getByRole("button", { name: /decrease/i }));
-    expect(onChange).toHaveBeenCalledWith(0);
+    render(<HabitLogControl habit={h({ type: "duration" })} onChange={onChange} />);
+    expect(screen.getByText("minutes")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "20" } });
+    expect(onChange).toHaveBeenLastCalledWith(20);
   });
 
-  it("duration: a quick-chip logs its minutes", async () => {
+  it("rating offers Low/Okay/Great and stores the literal", () => {
     const onChange = vi.fn();
-    render(<HabitLogControl habit={habit({ type: "duration", target: 20 })} onChange={onChange} />);
-    await userEvent.click(screen.getByRole("button", { name: "30m" }));
-    expect(onChange).toHaveBeenCalledWith(30);
-  });
-
-  it("time: changing the input logs HH:mm", () => {
-    const onChange = vi.fn();
-    render(<HabitLogControl habit={habit({ type: "time" })} onChange={onChange} />);
-    const input = screen.getByLabelText(/time/i);
-    // jsdom's <input type="time"> rejects partial values, so set it in one change.
-    fireEvent.change(input, { target: { value: "23:20" } });
-    expect(onChange).toHaveBeenCalledWith("23:20");
-  });
-
-  it("category: clicking a chip logs its option id", async () => {
-    const onChange = vi.fn();
-    const h = habit({ type: "category", categoryOptions: [{ id: "opt-1", label: "Strength" }] });
-    render(<HabitLogControl habit={h} onChange={onChange} />);
-    await userEvent.click(screen.getByRole("button", { name: "Strength" }));
-    expect(onChange).toHaveBeenCalledWith("opt-1");
+    render(<HabitLogControl habit={h({ type: "rating", streakType: "none" })} onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Great" }));
+    expect(onChange).toHaveBeenCalledWith("great");
   });
 });
