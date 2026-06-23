@@ -55,8 +55,8 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
   const [unit, setUnit] = useState(initial?.unit ?? "");
   const [rhythm, setRhythm] = useState<IntendedRhythm>(initial?.intendedRhythm ?? "daily");
   const [countPerWeek, setCountPerWeek] = useState<string>(initial?.intendedCountPerWeek?.toString() ?? "2");
-  const [streakType, setStreakType] = useState<StreakType>(initial?.streakType ?? "daily");
-  const [streakTouched, setStreakTouched] = useState(false);
+  const [streakType, setStreakType] = useState<StreakType>(initial?.streakType ?? recommendedStreak("yes_no", "daily"));
+  const [streakTouched, setStreakTouched] = useState(!!initial);
   const [error, setError] = useState("");
 
   function changeType(t: HabitType) {
@@ -68,8 +68,10 @@ export function HabitForm({ initial, onSubmit, onCancel }: Props) {
       setTarget(p.target?.toString() ?? "");
       setUnit(p.unit ?? "");
       setRhythm(p.intendedRhythm);
+      if (!streakTouched) setStreakType(recommendedStreak(t, p.intendedRhythm));
+    } else if (!streakTouched) {
+      setStreakType(recommendedStreak(t, rhythm));
     }
-    if (!streakTouched) setStreakType(recommendedStreak(t, initial?.intendedRhythm ?? rhythm));
   }
 
   function changeRhythm(r: IntendedRhythm) {

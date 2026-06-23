@@ -40,6 +40,8 @@ export default function HabitDetailRoute() {
   const weekAgo = addDays(todayKey(), -6);
   const thisWeekCount = habitEntries.filter((e) => e.date >= weekAgo && e.date <= todayKey()).length;
 
+  const gridCols = stats.streak.type === "daily" ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2";
+
   return (
     <div className="flex flex-col gap-4">
       <Link to="/" className="inline-flex items-center gap-1 text-sm text-[var(--muted-foreground)]">
@@ -60,7 +62,7 @@ export default function HabitDetailRoute() {
         ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className={`grid ${gridCols} gap-2`}>
         {stats.streak.type === "daily" ? (
           <>
             <StatsCard label="Current streak" value={`${stats.streak.count}`} hint="days" />
@@ -80,7 +82,7 @@ export default function HabitDetailRoute() {
         ) : (
           <>
             <StatsCard label="Total" value={`${stats.totalCompletions}`} hint="check-ins" />
-            <StatsCard label="This week" value={`${thisWeekCount}`} hint="entries" />
+            <StatsCard label="Last 7 days" value={`${thisWeekCount}`} hint="entries" />
           </>
         )}
       </div>
