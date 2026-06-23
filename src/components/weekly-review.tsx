@@ -26,7 +26,7 @@ export function WeeklyReview({ review, habits }: Props) {
           <div className="flex flex-wrap gap-2">
             {review.activeStreaks.map((s) => (
               <span key={s.habitId} className="inline-flex items-center gap-1 rounded-full bg-[var(--secondary)] px-3 py-1 text-xs">
-                <Flame className="h-3 w-3 text-[#E8A23D]" /> {nameOf(s.habitId)} · {s.streak}
+                <Flame className="h-3 w-3 text-[#E8A23D]" /> {nameOf(s.habitId)} · {s.streak} {s.unit}
               </span>
             ))}
           </div>
