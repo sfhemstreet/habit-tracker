@@ -67,7 +67,7 @@ function migrateHabitV1(
     case "number":
       return { ...common, type: "number", ...sched };
     case "duration":
-      return { ...common, type: "duration", unit: undefined, ...sched };
+      return { ...common, type: "duration", unit: undefined, ...sched }; // duration has no unit field in v2
     case "time":
       return null; // no clean mapping
     case "category": {

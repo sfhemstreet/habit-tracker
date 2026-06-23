@@ -42,3 +42,31 @@ describe("buildWeeklyReview v2", () => {
     expect(s?.unit).toBe("days");
   });
 });
+
+describe("buildWeeklyReview v2 — rule coverage", () => {
+  const ent = (habitId: string, date: string, value: HabitEntry["value"]): HabitEntry =>
+    ({ id: `${habitId}-${date}`, habitId, date, value, createdAt: "x", updatedAt: "x" });
+
+  it("suggests lowering target after >3 misses on a daily targeted habit", () => {
+    const habit = h({ id: "n", name: "Pushups", type: "number", target: 8,
+      intendedRhythm: "daily", streakType: "daily", createdAt: "2026-06-01T08:00:00.000Z" });
+    const review = buildWeeklyReview([habit], [ent("n", "2026-06-09", 10)], "2026-06-10");
+    expect(review.insights.some((i) => i.kind === "lower-target" && i.habitId === "n")).toBe(true);
+  });
+
+  it("does NOT suggest lowering target for a weekly habit hitting its rhythm", () => {
+    const habit = h({ id: "w", name: "Lower Body", type: "duration", target: 30,
+      intendedRhythm: "multiple_per_week", intendedCountPerWeek: 2, streakType: "weekly",
+      createdAt: "2026-06-01T08:00:00.000Z" });
+    const review = buildWeeklyReview([habit], [ent("w", "2026-06-08", 30), ent("w", "2026-06-10", 30)], "2026-06-10");
+    expect(review.insights.every((i) => i.kind !== "lower-target")).toBe(true);
+  });
+
+  it("celebrates a weekly rhythm held for 4 weeks", () => {
+    const habit = h({ id: "r", name: "Run", type: "duration", intendedRhythm: "weekly",
+      streakType: "weekly", createdAt: "2026-05-18T08:00:00.000Z" });
+    const entries = [ent("r", "2026-05-18", 30), ent("r", "2026-05-25", 30), ent("r", "2026-06-01", 30), ent("r", "2026-06-08", 30)];
+    const review = buildWeeklyReview([habit], entries, "2026-06-10");
+    expect(review.insights.some((i) => i.kind === "weekly-rhythm" && i.message.includes("4 weeks"))).toBe(true);
+  });
+});

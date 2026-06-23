@@ -140,6 +140,13 @@ describe("migrate v1 → v2", () => {
     expect(d.entries).toHaveLength(0);
   });
 
+  it("custom frequency with no activeDays falls back to 1×/week", () => {
+    const d = parseImport(v1([{ id: "a", name: "Gym", type: "boolean", color: "#000",
+      frequency: "custom", activeDays: [],
+      createdAt: "2026-06-01T08:00:00.000Z", archivedAt: null }]));
+    expect(d.habits[0].intendedCountPerWeek).toBe(1);
+  });
+
   it("is idempotent on already-v2 data", () => {
     const v2 = JSON.stringify({
       schemaVersion: 2,

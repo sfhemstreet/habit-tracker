@@ -58,6 +58,7 @@ function ratingSummary(habit: Habit, entries: HabitEntry[], todayK: string): Ins
   const dist = buildRatingDistribution(habit, recent);
   const total = dist.reduce((s, d) => s + d.count, 0);
   if (total === 0) return null;
+  // ties resolve to the later (more positive) slot, e.g. great over low
   const top = dist.reduce((a, b) => (b.count > a.count ? b : a));
   const mostly = top.count / total >= 0.6;
   return {
@@ -140,7 +141,7 @@ export function buildWeeklyReview(
     }
 
     // Rule: targeted habit missed >3 of last 7 → suggest lowering the target
-    if (h.streakType !== "none" && h.target && h.target > 0 && missesInLast7(h, hEntries, todayK) > 3) {
+    if (h.streakType === "daily" && h.target && h.target > 0 && missesInLast7(h, hEntries, todayK) > 3) {
       insights.push({
         id: `lower-${h.id}`, kind: "lower-target", habitId: h.id,
         title: `${h.name} may be too heavy`,
