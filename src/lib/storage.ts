@@ -48,6 +48,7 @@ function migrateHabitV1(
   raw: Record<string, unknown>,
   entryRemap: Map<string, Map<string, string>>, // habitId -> (oldValue -> newValue)
 ): Habit | null {
+  if (typeof raw !== "object" || raw === null) return null;
   const sched = frequencyToRhythm(raw);
   const common = {
     id: String(raw.id),
@@ -71,7 +72,9 @@ function migrateHabitV1(
     case "time":
       return null; // no clean mapping
     case "category": {
-      const opts = Array.isArray(raw.categoryOptions) ? raw.categoryOptions : [];
+      const opts = (Array.isArray(raw.categoryOptions) ? raw.categoryOptions : []).filter(
+        (o): o is Record<string, unknown> => typeof o === "object" && o !== null,
+      );
       const labels = opts.map((o) => String((o as Record<string, unknown>).label).trim().toLowerCase());
       const isRating = labels.length === 3 && labels.every((l) => RATING_LABELS.has(l));
       if (!isRating) return null;
@@ -103,6 +106,7 @@ function migrate(data: PersistedData): PersistedData {
 
   const entries: HabitEntry[] = [];
   for (const e of data.entries as unknown as Record<string, unknown>[]) {
+    if (typeof e !== "object" || e === null) continue;
     const habitId = String(e.habitId);
     if (!keptIds.has(habitId)) continue;
     let value = e.value as HabitEntry["value"];

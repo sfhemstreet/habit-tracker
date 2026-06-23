@@ -147,6 +147,28 @@ describe("migrate v1 → v2", () => {
     expect(d.habits[0].intendedCountPerWeek).toBe(1);
   });
 
+  it("drops a null habit element without throwing", () => {
+    const d = parseImport(v1([null, { id: "a", name: "OK", type: "boolean", color: "#000",
+      frequency: "daily", createdAt: "2026-06-01T08:00:00.000Z", archivedAt: null }] as unknown[]));
+    expect(d.habits).toHaveLength(1);
+    expect(d.habits[0].name).toBe("OK");
+  });
+
+  it("drops a category habit whose options aren't all objects, without throwing", () => {
+    const d = parseImport(v1([{ id: "c", name: "Mood", type: "category", color: "#000", frequency: "daily",
+      categoryOptions: [null, 5, "Low"], createdAt: "2026-06-01T08:00:00.000Z", archivedAt: null }]));
+    expect(d.habits).toHaveLength(0);
+  });
+
+  it("skips a null entry element without throwing", () => {
+    const d = parseImport(v1(
+      [{ id: "a", name: "OK", type: "boolean", color: "#000", frequency: "daily",
+        createdAt: "2026-06-01T08:00:00.000Z", archivedAt: null }],
+      [null, { id: "e1", habitId: "a", date: "2026-06-02", value: true, createdAt: "x", updatedAt: "x" }] as unknown[],
+    ));
+    expect(d.entries).toHaveLength(1);
+  });
+
   it("is idempotent on already-v2 data", () => {
     const v2 = JSON.stringify({
       schemaVersion: 2,
