@@ -94,7 +94,7 @@ describe("migrate v1 → v2", () => {
       target: 8, targetUnit: "glasses", frequency: "daily",
       createdAt: "2026-06-01T08:00:00.000Z", archivedAt: null }]));
     expect(d.habits[0].unit).toBe("glasses");
-    expect((d.habits[0] as Record<string, unknown>).targetUnit).toBeUndefined();
+    expect((d.habits[0] as unknown as Record<string, unknown>).targetUnit).toBeUndefined();
   });
 
   it("custom frequency → multiple_per_week with count = #activeDays", () => {
