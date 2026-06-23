@@ -21,13 +21,13 @@ export interface AddHabitInput {
   name: string;
   type: Habit["type"];
   color: string;
-  frequency: Habit["frequency"];
+  intendedRhythm: Habit["intendedRhythm"];
+  streakType: Habit["streakType"];
   description?: string;
   icon?: string;
   target?: number;
-  targetUnit?: string;
-  categoryOptions?: Habit["categoryOptions"];
-  activeDays?: number[];
+  unit?: string;
+  intendedCountPerWeek?: number;
 }
 
 export interface UpsertEntryInput {
@@ -61,7 +61,7 @@ export interface HabitState {
 
 function snapshot(state: HabitState): PersistedData {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     habits: state.habits,
     entries: state.entries,
     settings: state.settings,
@@ -100,10 +100,10 @@ export function createHabitStore() {
           color: input.color,
           icon: input.icon,
           target: input.target,
-          targetUnit: input.targetUnit,
-          categoryOptions: input.categoryOptions,
-          frequency: input.frequency,
-          activeDays: input.activeDays,
+          unit: input.unit,
+          intendedRhythm: input.intendedRhythm,
+          intendedCountPerWeek: input.intendedCountPerWeek,
+          streakType: input.streakType,
           createdAt: now,
           archivedAt: null,
         };
